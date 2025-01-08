@@ -1,9 +1,9 @@
 # turn-based-game
 
-Judul: 
+Title: 
 Turn-Based Tank Battle
 
-Deskripsi:
+Description:
 "Turn-Based Tank Battle" is an offline game that pits two players in a strategic tank battle.
 Players control either a red or green tank in a grid-shaped arena.
 Each player takes turns (turn-based) to choose to attack (random damage), move, or heal.
