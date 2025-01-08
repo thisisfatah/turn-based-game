@@ -8,7 +8,8 @@ public class Unit : MonoBehaviour
 {
 	public string unitName;
 
-	public int damage;
+	public int minDamage;
+	public int maxDamage;
 
 	public int maxHP;
 	public int currentHP;
@@ -45,6 +46,12 @@ public class Unit : MonoBehaviour
 		{
 			currentHP = maxHP;
 		}
+	}
+
+	public int GetDamage()
+	{
+		int damage = Random.Range(minDamage, maxDamage);
+		return damage;
 	}
 
 	public void StartMove(Vector3 targetPosition)

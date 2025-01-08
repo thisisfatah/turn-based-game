@@ -60,7 +60,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   unitName: PLAYER 1
-  damage: 5
+  minDamage: 5
+  maxDamage: 20
   maxHP: 30
   currentHP: 30
 --- !u!1001 &5818968162203081694

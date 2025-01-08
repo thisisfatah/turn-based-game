@@ -235,8 +235,9 @@ public class BattleSystem : MonoBehaviour
 
 	private IEnumerator Player_1_Attack()
 	{
-		bool isDead = player_2_Unit.TakeDamage(player_1_Unit.damage);
-		DamagePopup.Create(player_2_Unit.transform.position, player_1_Unit.damage, false);
+		int damage = player_1_Unit.GetDamage();
+		bool isDead = player_2_Unit.TakeDamage(damage);
+		DamagePopup.Create(player_2_Unit.transform.position, damage, false);
 		player_2_HUD.SetHealth();
 		dialogueText.text = $"{player_1_Unit.unitName} THE ATTACK IS \n SUCCESFUL! ";
 
@@ -261,8 +262,9 @@ public class BattleSystem : MonoBehaviour
 
 	private IEnumerator Player_2_Attack()
 	{
-		bool isDead = player_1_Unit.TakeDamage(player_1_Unit.damage);
-		DamagePopup.Create(player_1_Unit.transform.position, player_2_Unit.damage, false);
+		int damage = player_2_Unit.GetDamage();
+		bool isDead = player_1_Unit.TakeDamage(damage);
+		DamagePopup.Create(player_1_Unit.transform.position, damage, false);
 		player_1_HUD.SetHealth();
 		dialogueText.text = $"{player_2_Unit.unitName} THE ATTACK IS \n SUCCESFUL! ";
 
