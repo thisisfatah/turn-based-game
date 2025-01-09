@@ -1,9 +1,7 @@
 using System.Collections;
-using System.Collections.Generic;
-using TMPro;
-using Unity.Burst.CompilerServices;
-using UnityEditor.Rendering;
 using UnityEngine;
+using TMPro;
+using System;
 
 public enum BattleState
 {
@@ -15,7 +13,7 @@ public enum BattleState
 	PLAYER_2_WON
 }
 
-public class BattleSystem : MonoBehaviour
+public class GameplayManager : MonoBehaviour
 {
 	public const string PLAYER1_TAG = "Player 1";
 	public const string PLAYER2_TAG = "Player 2";
@@ -33,43 +31,35 @@ public class BattleSystem : MonoBehaviour
 	[SerializeField]
 	private Transform enemyBattleParent;
 
-	[Header("UI Component")]
+	[Header("Game UI")]
 	[SerializeField]
-	private TextMeshProUGUI dialogueText;
-	[Space(10)]
-	[SerializeField]
-	private BattleHUD player_1_HUD;
-	[SerializeField]
-	private BattleHUD player_2_HUD;
-	[SerializeField]
-	private GameObject gameplayPanel;
-	[SerializeField]
-	private GameObject tutorialPanel;
+	private GameUI gameUI;
 
-	private Unit player_1_Unit;
-	private Unit player_2_Unit;
+	private Player player_1_Unit;
+	private Player player_2_Unit;
 
-	private Unit selectedPlayer_1;
-	private Unit selectedPlayer_2;
+	private Player selectedPlayer_1;
+	private Player selectedPlayer_2;
 	private Vector3 targetLocation;
 
 	private void Start()
 	{
 		state = BattleState.START;
+
 		SetupBattle();
 	}
 
 	private void SetupBattle()
 	{
 		Transform heroTransform = Instantiate(heroPrefab, playerBattleParent);
-		player_1_Unit = heroTransform.GetComponent<Unit>();
+		player_1_Unit = heroTransform.GetComponent<Player>();
+		player_1_Unit.battleHUD = gameUI.GetBattleHUD_Player1();
 
 		Transform enemyTransform = Instantiate(enemyPrefab, enemyBattleParent);
-		player_2_Unit = enemyTransform.GetComponent<Unit>();
+		player_2_Unit = enemyTransform.GetComponent<Player>();
+		player_2_Unit.battleHUD = gameUI.GetBattleHUD_Player2();
 
-		dialogueText.text = $"WAIT FOR IT...";
-
-		
+		gameUI.SetDialogText($"WAIT FOR IT...");
 	}
 
 	private void Update()
@@ -79,11 +69,7 @@ public class BattleSystem : MonoBehaviour
 		{
 			if (state == BattleState.START)
 			{
-				gameplayPanel.SetActive(true);
-				tutorialPanel.SetActive(false);
-
-				player_1_HUD.SetHUD(player_1_Unit);
-				player_2_HUD.SetHUD(player_2_Unit);
+				gameUI.StartBattle();
 
 				Player_1_Turn();
 				return;
@@ -112,7 +98,7 @@ public class BattleSystem : MonoBehaviour
 
 	}
 
-	private void SelectedTileToMove(Ray ray, Unit unit)
+	private void SelectedTileToMove(Ray ray, Player unit)
 	{
 		if (unit != null)
 		{
@@ -161,7 +147,7 @@ public class BattleSystem : MonoBehaviour
 		{
 			if (hit.collider.CompareTag(PLAYER1_TAG))
 			{
-				selectedPlayer_1 = hit.collider.GetComponent<Unit>();
+				selectedPlayer_1 = hit.collider.GetComponent<Player>();
 			}
 		}
 		else
@@ -195,7 +181,7 @@ public class BattleSystem : MonoBehaviour
 		{
 			if (hit.collider.CompareTag(PLAYER2_TAG))
 			{
-				selectedPlayer_2 = hit.collider.GetComponent<Unit>();
+				selectedPlayer_2 = hit.collider.GetComponent<Player>();
 			}
 		}
 		else
@@ -224,13 +210,13 @@ public class BattleSystem : MonoBehaviour
 	private void Player_1_Turn()
 	{
 		state = BattleState.PLAYER_1_TURN;
-		dialogueText.text = $"{player_1_Unit.unitName} CHOOSE AN ACTION: ";
+		gameUI.SetDialogText($"{player_1_Unit.unitName} CHOOSE AN ACTION: ");
 	}
 
 	private void Player_2_Turn()
 	{
 		state = BattleState.PLAYER_2_TURN;
-		dialogueText.text = $"{player_2_Unit.unitName} CHOOSE AN ACTION: ";
+		gameUI.SetDialogText($"{player_2_Unit.unitName} CHOOSE AN ACTION: ");
 	}
 
 	private IEnumerator Player_1_Attack()
@@ -238,8 +224,7 @@ public class BattleSystem : MonoBehaviour
 		int damage = player_1_Unit.GetDamage();
 		bool isDead = player_2_Unit.TakeDamage(damage);
 		DamagePopup.Create(player_2_Unit.transform.position, damage, false);
-		player_2_HUD.SetHealth();
-		dialogueText.text = $"{player_1_Unit.unitName} THE ATTACK IS \n SUCCESFUL! ";
+		gameUI.SetDialogText($"{player_1_Unit.unitName} THE ATTACK IS \n SUCCESFUL! ");
 
 		state = BattleState.WAITING;
 
@@ -251,7 +236,7 @@ public class BattleSystem : MonoBehaviour
 		{
 			// End Battle
 			state = BattleState.PLAYER_1_WON;
-			EndBattle();
+			StartCoroutine(EndBattle());
 		}
 		else
 		{
@@ -265,8 +250,7 @@ public class BattleSystem : MonoBehaviour
 		int damage = player_2_Unit.GetDamage();
 		bool isDead = player_1_Unit.TakeDamage(damage);
 		DamagePopup.Create(player_1_Unit.transform.position, damage, false);
-		player_1_HUD.SetHealth();
-		dialogueText.text = $"{player_2_Unit.unitName} THE ATTACK IS \n SUCCESFUL! ";
+		gameUI.SetDialogText($"{player_2_Unit.unitName} THE ATTACK IS \n SUCCESFUL! ");
 
 		state = BattleState.WAITING;
 
@@ -278,7 +262,7 @@ public class BattleSystem : MonoBehaviour
 		{
 			// End Battle
 			state = BattleState.PLAYER_2_WON;
-			EndBattle();
+			StartCoroutine(EndBattle());
 		}
 		else
 		{
@@ -292,8 +276,7 @@ public class BattleSystem : MonoBehaviour
 	{
 		player_1_Unit.Heal(5);
 
-		player_1_HUD.SetHealth();
-		dialogueText.text = $"{player_1_Unit.unitName} FEEL RENEWED \n STRENGTH!";
+		gameUI.SetDialogText($"{player_1_Unit.unitName} FEEL RENEWED \n STRENGTH!");
 
 		state = BattleState.WAITING;
 
@@ -306,8 +289,7 @@ public class BattleSystem : MonoBehaviour
 	{
 		player_2_Unit.Heal(5);
 
-		player_2_HUD.SetHealth();
-		dialogueText.text = $"{player_2_Unit.unitName} FEEL RENEWED \n STRENGTH!";
+		gameUI.SetDialogText($"{player_2_Unit.unitName} FEEL RENEWED \n STRENGTH!");
 
 		state = BattleState.WAITING;
 
@@ -316,16 +298,23 @@ public class BattleSystem : MonoBehaviour
 		Player_1_Turn();
 	}
 
-	private void EndBattle()
+	private IEnumerator EndBattle()
 	{
+		string text = "";
 		if (state == BattleState.PLAYER_1_WON)
 		{
-			dialogueText.text = $"{player_1_Unit.unitName} WON THE BATTLE!";
+			text = $"{player_1_Unit.unitName} WON THE BATTLE!";
 		}
 		else if (state == BattleState.PLAYER_2_WON)
 		{
-			dialogueText.text = $"{player_2_Unit.unitName} WON THE BATTLE!";
+			text = $"{player_2_Unit.unitName} WON THE BATTLE!";
 		}
+
+		gameUI.SetDialogText(text);
+
+		yield return new WaitForSeconds(1.0f);
+
+		gameUI.EndBattle(text);
 	}
 
 	public void OnHealButton()

@@ -1,10 +1,7 @@
 using System.Collections;
-using System.Collections.Generic;
-using System.IO;
-using Unity.Burst.CompilerServices;
 using UnityEngine;
 
-public class Unit : MonoBehaviour
+public class Player : MonoBehaviour
 {
 	public string unitName;
 
@@ -13,6 +10,8 @@ public class Unit : MonoBehaviour
 
 	public int maxHP;
 	public int currentHP;
+
+	public BattleHUD battleHUD;
 
 	private Vector3[] path;
 	private int targetIndex;
@@ -24,12 +23,15 @@ public class Unit : MonoBehaviour
 
 		Node node = grid.GetNodeFromWorldPoint(transform.position);
 		transform.position = new Vector3(node.worldPosition.x, transform.position.y, node.worldPosition.z);
+
+		battleHUD.SetHUD(this);
 	}
 
 	public bool TakeDamage(int damage)
 	{
 		currentHP -= damage;
 
+		battleHUD.SetHealth();
 		if (currentHP <= 0)
 		{
 			return true;
@@ -46,6 +48,7 @@ public class Unit : MonoBehaviour
 		{
 			currentHP = maxHP;
 		}
+		battleHUD.SetHealth();
 	}
 
 	public int GetDamage()

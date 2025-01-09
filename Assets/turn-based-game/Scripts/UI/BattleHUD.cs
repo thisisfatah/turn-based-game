@@ -11,9 +11,9 @@ public class BattleHUD : MonoBehaviour
 	[SerializeField]
 	private Image healthImage;
 
-	private Unit unit;
+	private Player unit;
 
-	public void SetHUD(Unit unit)
+	public void SetHUD(Player unit)
 	{
 		this.unit = unit;
 		nameText.text = unit.unitName;
